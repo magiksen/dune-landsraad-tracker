@@ -147,7 +147,6 @@ body {
     margin-top: 1rem;
     border: 1px solid rgba(180, 83, 9, 0.4);
     font-size: 0.75rem;
-    max-height: 200px;
     overflow-y: auto;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
