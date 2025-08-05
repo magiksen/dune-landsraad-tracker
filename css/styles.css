@@ -175,7 +175,7 @@ body {
 }
 
 .items-needed span:last-child {
-    color: var(--color-amber-100);
+    color: var(--color-amber-200);
     font-family: 'Courier New', monospace;
     background: rgba(0, 0, 0, 0.3);
     padding: 0.1rem 0.5rem;
