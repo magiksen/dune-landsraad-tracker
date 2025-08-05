@@ -193,8 +193,8 @@ function renderHouses() {
                 label.textContent = `Nivel ${i + 1} (${MILESTONES[i]} pts):`;
                 
                 const value = document.createElement('span');
-                value.className = 'font-mono';
-                value.textContent = `${items} ${house.task.toLowerCase()}`;
+                value.className = 'font-mono text-white';
+                value.textContent = `${items}`;
                 
                 itemEl.appendChild(label);
                 itemEl.appendChild(value);
@@ -364,7 +364,7 @@ function renderHouses() {
                 label.textContent = `Nivel ${i + 1} (${milestone} pts):`;
                 
                 const value = document.createElement('span');
-                value.className = 'font-mono';
+                value.className = 'font-mono text-white';
                 value.textContent = `0 items`;
                 
                 itemEl.appendChild(label);
