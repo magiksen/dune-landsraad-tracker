@@ -1,0 +1,265 @@
+/* Custom styles for Landsraad Tracker */
+:root {
+    --color-sand-100: #f5f5f0;
+    --color-amber-200: #fde68a;
+    --color-amber-400: #f59e0b;
+    --color-amber-500: #f59e0b;
+    --color-amber-600: #d97706;
+    --color-amber-700: #b45309;
+    --color-amber-800: #92400e;
+    --color-green-400: #34d399;
+    --color-green-500: #10b981;
+    --color-green-600: #059669;
+    --color-gray-800: #1f2937;
+    --color-gray-900: #111827;
+}
+
+body {
+    font-family: 'Montserrat', sans-serif;
+}
+
+.font-cinzel {
+    font-family: 'Cinzel', serif;
+}
+
+/* Utility classes */
+.hidden {
+    display: none;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--color-gray-900);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--color-amber-800);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-amber-700);
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.house-card {
+    animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* House Factions */
+.house-card[data-faction="Harkonnen"] .faction-tag {
+    color: #ff6b6b;
+    font-weight: bold;
+}
+
+.house-card[data-faction="Atreides"] .faction-tag {
+    color: #4d9de0;
+    font-weight: bold;
+}
+
+.house-card[data-faction="Corrino"] .faction-tag {
+    color: #af7ac5;
+    font-weight: bold;
+}
+
+.house-card[data-faction="Neutral"] .faction-tag {
+    color: #f9ca24;
+    font-weight: bold;
+}
+
+.house-card[data-faction="Nomadic"] .faction-tag {
+    color: #6ab04c;
+    font-weight: bold;
+}
+
+/* Custom checkbox */
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+}
+
+.checkbox-container input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 2px solid var(--color-amber-700);
+    border-radius: 0.25rem;
+    margin-right: 0.5rem;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.checkbox-container input[type="checkbox"]:checked {
+    background-color: var(--color-amber-600);
+    border-color: var(--color-amber-600);
+}
+
+.checkbox-container input[type="checkbox"]:checked::after {
+    content: '✓';
+    position: absolute;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: bold;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* House Card */
+.house-card {
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.house-card .p-4 {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Task info */
+.task-info {
+    transition: all 0.3s ease;
+    flex: 1;
+}
+
+/* Items needed */
+.items-needed {
+    background: rgba(15, 23, 42, 0.8);
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    margin-top: 1rem;
+    border: 1px solid rgba(180, 83, 9, 0.4);
+    font-size: 0.75rem;
+    max-height: 200px;
+    overflow-y: auto;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.items-needed > div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.4rem 0.5rem;
+    margin: 0.2rem 0;
+    background: rgba(30, 41, 59, 0.5);
+    border-radius: 0.25rem;
+    border-left: 3px solid var(--color-amber-600);
+    transition: all 0.2s ease;
+}
+
+.items-needed > div:hover {
+    background: rgba(51, 65, 85, 0.5);
+    transform: translateX(2px);
+}
+
+.items-needed span:first-child {
+    color: var(--color-amber-200);
+    font-weight: 500;
+}
+
+.items-needed span:last-child {
+    color: var(--color-amber-100);
+    font-family: 'Courier New', monospace;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 0.1rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.7rem;
+}
+
+/* Scrollbar for items-needed */
+.items-needed::-webkit-scrollbar {
+    width: 5px;
+}
+
+.items-needed::-webkit-scrollbar-thumb {
+    background-color: var(--color-amber-700);
+    border-radius: 10px;
+}
+
+.items-needed::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+}
+
+/* Progress bar */
+.progress-bar {
+    height: 6px;
+    background-color: var(--color-gray-800);
+    border-radius: 3px;
+    margin-bottom: 0.5rem;
+    overflow: hidden;
+    width: 100%;
+}
+
+.progress-fill {
+    height: 100%;
+    width: 0%;
+    transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+/* Progress bar colors */
+.progress-fill.bg-amber-600 {
+    background: linear-gradient(90deg, var(--color-amber-600), var(--color-amber-500));
+}
+
+.progress-fill.bg-green-600 {
+    background: linear-gradient(90deg, var(--color-green-600), var(--color-green-400));
+}
+
+/* Modal */
+#taskModal {
+    backdrop-filter: blur(4px);
+}
+
+#taskModal > div {
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+}
+
+/* Tooltip */
+.tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 200px;
+    background-color: var(--color-gray-900);
+    color: var(--color-amber-200);
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-size: 0.875rem;
+    border: 1px solid var(--color-amber-800);
+}
+
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+}
