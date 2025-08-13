@@ -66,6 +66,28 @@ function loadHouses() {
     if (savedHouses) {
         houses = JSON.parse(savedHouses);
         
+        // Normalize existing data to include new fields/lengths
+        houses = houses.map(h => {
+            const normalized = { ...h };
+            // Ensure claimed exists and matches milestones length
+            if (!Array.isArray(normalized.claimed)) {
+                normalized.claimed = Array(MILESTONES.length).fill(false);
+            } else if (normalized.claimed.length !== MILESTONES.length) {
+                normalized.claimed = Array.from({ length: MILESTONES.length }, (_, i) => !!normalized.claimed[i]);
+            }
+            // Ensure levelsCompleted exists and matches milestones length
+            if (!Array.isArray(normalized.levelsCompleted)) {
+                normalized.levelsCompleted = Array(MILESTONES.length).fill(false);
+            } else if (normalized.levelsCompleted.length !== MILESTONES.length) {
+                normalized.levelsCompleted = Array.from({ length: MILESTONES.length }, (_, i) => !!normalized.levelsCompleted[i]);
+            }
+            // Keep legacy numeric completed but no longer used
+            if (typeof normalized.completed !== 'number') {
+                normalized.completed = 0;
+            }
+            return normalized;
+        });
+        
         // Ensure all HOUSES are present in the saved data
         const savedHouseNames = houses.map(h => h.name);
         const missingHouses = HOUSES.filter(house => !savedHouseNames.includes(house.name));
@@ -76,7 +98,8 @@ function loadHouses() {
                 task: '',
                 pointsPerUnit: 0,
                 completed: 0,
-                claimed: Array(MILESTONES.length).fill(false)
+                claimed: Array(MILESTONES.length).fill(false),
+                levelsCompleted: Array(MILESTONES.length).fill(false)
             });
         });
         
@@ -96,7 +119,8 @@ function loadHouses() {
             task: '',
             pointsPerUnit: 0,
             completed: 0,
-            claimed: Array(MILESTONES.length).fill(false)
+            claimed: Array(MILESTONES.length).fill(false),
+            levelsCompleted: Array(MILESTONES.length).fill(false)
         }));
         localStorage.setItem('landsraadHouses', JSON.stringify(houses));
     }
@@ -141,7 +165,8 @@ function renderHouses() {
             task: '',
             pointsPerUnit: 0,
             completed: 0,
-            claimed: Array(MILESTONES.length).fill(false)
+            claimed: Array(MILESTONES.length).fill(false),
+            levelsCompleted: Array(MILESTONES.length).fill(false)
         };
         orderedHouses.push(house);
     });
@@ -175,125 +200,61 @@ function renderHouses() {
         if (house.task) {
             taskDescriptionEl.textContent = house.task;
             pointsPerUnitEl.textContent = house.pointsPerUnit;
-            
-            // Calculate and display progress
-            const totalPoints = house.completed * house.pointsPerUnit;
-            cardElement.querySelector('.total-points').textContent = totalPoints;
-            
-            // Calculate items needed for each milestone
+            // Calculate items needed for each milestone and render rows with toggles
             const itemsNeeded = calculateItemsNeeded(house);
             const itemsNeededEl = cardElement.querySelector('.items-needed');
             itemsNeededEl.innerHTML = '';
             
             itemsNeeded.forEach((items, i) => {
-                const itemEl = document.createElement('div');
-                itemEl.className = 'flex justify-between items-center py-1';
+                const row = document.createElement('div');
+                row.className = 'flex justify-between items-center py-1';
                 
+                const left = document.createElement('div');
                 const label = document.createElement('span');
-                label.textContent = `Nivel ${i + 1} (${MILESTONES[i]} pts):`;
-                
+                label.textContent = `(${MILESTONES[i]} pts):`;
                 const value = document.createElement('span');
-                value.className = 'font-mono text-white';
+                value.className = 'font-mono text-white ml-2';
                 value.textContent = `${items}`;
+                left.appendChild(label);
+                left.appendChild(value);
                 
-                itemEl.appendChild(label);
-                itemEl.appendChild(value);
-                itemsNeededEl.appendChild(itemEl);
+                const toggles = document.createElement('div');
+                toggles.className = 'flex items-center gap-3';
+                
+                // Completed toggle
+                const completedWrap = document.createElement('label');
+                completedWrap.className = 'checkbox-container text-xs text-amber-200';
+                const completedCb = document.createElement('input');
+                completedCb.type = 'checkbox';
+                completedCb.checked = !!house.levelsCompleted?.[i];
+                completedCb.addEventListener('change', () => toggleLevelCompleted(house.name, i));
+                const completedText = document.createElement('span');
+                completedText.textContent = 'Hecho';
+                completedWrap.appendChild(completedCb);
+                completedWrap.appendChild(completedText);
+                
+                // Claimed toggle
+                const claimedWrap = document.createElement('label');
+                claimedWrap.className = 'checkbox-container text-xs text-amber-200';
+                const claimedCb = document.createElement('input');
+                claimedCb.type = 'checkbox';
+                claimedCb.checked = !!house.claimed?.[i];
+                claimedCb.addEventListener('change', () => toggleClaimed(house.name, i));
+                const claimedText = document.createElement('span');
+                claimedText.textContent = 'Reclamada';
+                claimedWrap.appendChild(claimedCb);
+                claimedWrap.appendChild(claimedText);
+                
+                toggles.appendChild(completedWrap);
+                toggles.appendChild(claimedWrap);
+                
+                row.appendChild(left);
+                row.appendChild(toggles);
+                itemsNeededEl.appendChild(row);
             });
             
-            // Render progress bars
-            const progressContainer = cardElement.querySelector('.progress-bars');
-            progressContainer.innerHTML = '';
-            
-            // Ensure we have points per unit to avoid division by zero
-            const pointsPerUnit = house.pointsPerUnit || 1;
-            
-            MILESTONES.forEach((milestone, i) => {
-                const totalPoints = house.completed * pointsPerUnit;
-                const progress = Math.min((totalPoints / milestone) * 100, 100);
-                const isClaimed = house.claimed[i];
-                
-                const milestoneDiv = document.createElement('div');
-                milestoneDiv.className = 'mb-2';
-                
-                const label = document.createElement('div');
-                label.className = 'flex justify-between text-xs mb-1';
-                
-                const milestoneLabel = document.createElement('span');
-                milestoneLabel.className = 'text-amber-200';
-                milestoneLabel.textContent = `Nivel ${i + 1} (${milestone} pts)`;
-                
-                const status = document.createElement('span');
-                status.className = isClaimed ? 'text-green-400' : 'text-amber-400';
-                status.textContent = isClaimed ? 'Reclamado' : `${Math.floor(progress)}%`;
-                
-                label.appendChild(milestoneLabel);
-                label.appendChild(status);
-                
-                const progressBar = document.createElement('div');
-                progressBar.className = 'progress-bar';
-                
-                const progressFill = document.createElement('div');
-                progressFill.className = 'progress-fill';
-                progressFill.style.width = `${progress}%`;
-                
-                // Add a class to the fill for better styling
-                if (progress >= 100) {
-                    progressFill.classList.add('bg-green-600');
-                } else {
-                    progressFill.classList.add('bg-amber-600');
-                }
-                
-                progressBar.appendChild(progressFill);
-                milestoneDiv.appendChild(label);
-                milestoneDiv.appendChild(progressBar);
-                
-                // Add click handler to toggle claimed status
-                if (totalPoints >= milestone) {
-                    milestoneDiv.classList.add('cursor-pointer', 'hover:opacity-80');
-                    milestoneDiv.addEventListener('click', () => toggleClaimed(house.name, i));
-                }
-                
-                progressContainer.appendChild(milestoneDiv);
-            });
-            
-            // Set up update button
-            const progressInput = cardElement.querySelector('.progress-input');
-            const updateProgressBtn = cardElement.querySelector('.update-progress-btn');
-            const quantityInput = cardElement.querySelector('input[type="number"]');
-            
-            if (updateProgressBtn) {
-                updateProgressBtn.addEventListener('click', () => {
-                    const newProgress = parseInt(progressInput.value) || 0;
-                    updateHouseProgress(house.name, newProgress);
-                    // Clear the input after updating
-                    progressInput.value = '';
-                });
-            }
-            
-            // Set up old update button (if exists)
-            const updateBtn = cardElement.querySelector('.update-btn');
-            
-            if (updateBtn) {
-                updateBtn.addEventListener('click', () => {
-                    const quantity = parseInt(quantityInput.value) || 0;
-                    updateHouseProgress(house.name, house.completed + quantity);
-                    // Clear the input after updating
-                    quantityInput.value = '';
-                });
-            }
-            
-            // Allow pressing Enter in the input
-            quantityInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    updateBtn.click();
-                }
-            });
-            
-            // Show task info and update form
+            // Show task info
             taskInfo.classList.remove('hidden');
-            cardElement.querySelector('input[type="number"]').closest('div').classList.remove('hidden');
             
             // Change assign task button to edit
             const assignBtn = cardElement.querySelector('.assign-task-btn');
@@ -315,65 +276,10 @@ function renderHouses() {
             // Show empty state for houses without tasks
             taskDescriptionEl.textContent = 'Sin tarea asignada';
             pointsPerUnitEl.textContent = '0';
-            cardElement.querySelector('.total-points').textContent = '0';
             
-            // Show empty progress bars
-            const progressContainer = cardElement.querySelector('.progress-bars');
-            progressContainer.innerHTML = '';
-            
-            MILESTONES.forEach((milestone, i) => {
-                const milestoneDiv = document.createElement('div');
-                milestoneDiv.className = 'mb-2';
-                
-                const label = document.createElement('div');
-                label.className = 'flex justify-between text-xs mb-1';
-                
-                const milestoneLabel = document.createElement('span');
-                milestoneLabel.className = 'text-amber-200';
-                milestoneLabel.textContent = `Nivel ${i + 1} (${milestone} pts)`;
-                
-                const status = document.createElement('span');
-                status.className = 'text-gray-500';
-                status.textContent = '0%';
-                
-                label.appendChild(milestoneLabel);
-                label.appendChild(status);
-                
-                const progressBar = document.createElement('div');
-                progressBar.className = 'progress-bar';
-                
-                const progressFill = document.createElement('div');
-                progressFill.className = 'progress-fill';
-                progressFill.style.width = '0%';
-                
-                progressBar.appendChild(progressFill);
-                milestoneDiv.appendChild(label);
-                milestoneDiv.appendChild(progressBar);
-                
-                progressContainer.appendChild(milestoneDiv);
-            });
-            
-            // Show items needed (all zeros)
+            // Show items needed placeholder (requires task to compute)
             const itemsNeededEl = cardElement.querySelector('.items-needed');
-            itemsNeededEl.innerHTML = '<div class="font-semibold text-amber-300 mb-2">Items necesarios:</div>';
-            
-            MILESTONES.forEach((milestone, i) => {
-                const itemEl = document.createElement('div');
-                
-                const label = document.createElement('span');
-                label.textContent = `Nivel ${i + 1} (${milestone} pts):`;
-                
-                const value = document.createElement('span');
-                value.className = 'font-mono text-white';
-                value.textContent = `0 items`;
-                
-                itemEl.appendChild(label);
-                itemEl.appendChild(value);
-                itemsNeededEl.appendChild(itemEl);
-            });
-            
-            // Hide update form if no task assigned
-            cardElement.querySelector('input[type="number"]').closest('div').classList.add('hidden');
+            itemsNeededEl.innerHTML = '<div class="text-xs text-amber-200">Asigna una tarea para calcular los items necesarios.</div>';
         }
         
         // Set up assign task button
@@ -391,6 +297,21 @@ function toggleClaimed(houseName, milestoneIndex) {
     
     if (houseIndex !== -1) {
         houses[houseIndex].claimed[milestoneIndex] = !houses[houseIndex].claimed[milestoneIndex];
+        saveHouses(houses);
+        renderHouses();
+    }
+}
+
+// Toggle completed status for a milestone
+function toggleLevelCompleted(houseName, milestoneIndex) {
+    const houses = getHouses();
+    const houseIndex = houses.findIndex(h => h.name === houseName);
+    
+    if (houseIndex !== -1) {
+        if (!Array.isArray(houses[houseIndex].levelsCompleted)) {
+            houses[houseIndex].levelsCompleted = Array(MILESTONES.length).fill(false);
+        }
+        houses[houseIndex].levelsCompleted[milestoneIndex] = !houses[houseIndex].levelsCompleted[milestoneIndex];
         saveHouses(houses);
         renderHouses();
     }
@@ -426,7 +347,8 @@ function resetHouseTask(houseName) {
             task: '',
             pointsPerUnit: 0,
             completed: 0,
-            claimed: Array(MILESTONES.length).fill(false)
+            claimed: Array(MILESTONES.length).fill(false),
+            levelsCompleted: Array(MILESTONES.length).fill(false)
         };
         
         saveHouses(houses);
@@ -486,7 +408,8 @@ function setupEventListeners() {
                 task,
                 pointsPerUnit: points,
                 completed: 0,
-                claimed: Array(MILESTONES.length).fill(false)
+                claimed: Array(MILESTONES.length).fill(false),
+                levelsCompleted: Array(MILESTONES.length).fill(false)
             });
         } else {
             // Update existing house task
@@ -495,7 +418,8 @@ function setupEventListeners() {
                 task,
                 pointsPerUnit: points,
                 completed: 0,
-                claimed: Array(MILESTONES.length).fill(false)
+                claimed: Array(MILESTONES.length).fill(false),
+                levelsCompleted: Array(MILESTONES.length).fill(false)
             };
         }
         
